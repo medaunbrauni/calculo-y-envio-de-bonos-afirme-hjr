@@ -1,0 +1,10 @@
+node_modules/
+dist/
+.env
+.env.local
+*.log
+.DS_Store
+
+# Datos reales de clientes/agentes (montos, nombres) — solo para tests locales,
+# nunca se sube al repo. Los tests que la usan requieren este archivo en disco.
+sample-data/
