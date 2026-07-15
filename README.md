@@ -18,11 +18,13 @@ npm run test      # tests del motor de cálculo (Vitest)
 - ✅ Repo: https://github.com/medaunbrauni/calculo-y-envio-de-bonos-afirme-hjr (público — GitHub Pages no funciona en repo privado sin plan de pago)
 - ✅ Sitio en producción: **https://medaunbrauni.github.io/calculo-y-envio-de-bonos-afirme-hjr/**
 - ✅ `sample-data/` excluida del repo (`.gitignore`), workflow de deploy compila sin correr tests
-- ❌ **Pendiente: conectar Gmail** (sin esto no se puede enviar correo, ver abajo)
+- ✅ Gmail conectado (Client ID configurado en `.env` local y como secret del repo)
 
-## Configurar el envío de correo (Gmail API) — PENDIENTE
+Ver **"Pendientes"** al final de este README para lo que sigue.
 
-El envío usa Google Identity Services (GIS) 100% desde el navegador — no hay backend ni client secret. Falta hacer esto (~15 min, una sola vez):
+## Configurar el envío de correo (Gmail API)
+
+Ya está configurado (Client ID en `.env` local y en el secret `VITE_GOOGLE_CLIENT_ID` del repo). Notas por si hay que rehacerlo (ej. en otra cuenta de Google, u otro repo):
 
 1. Crea un proyecto en [Google Cloud Console](https://console.cloud.google.com/).
 2. Habilita la **Gmail API** (APIs y servicios → Habilitar APIs y servicios).
@@ -65,3 +67,11 @@ sample-data/   → Excel real + PDFs de referencia (formato), usados como fixtur
 - `2026_BONO_MAYO_JIRO_CHIH.pdf`, `2026_BONO_MAYO_JIRO_TOLUCA.pdf`, `2026_BONO_MAYO_IVAN_LEON.pdf` — PDFs de un ciclo distinto (mayo) al Excel de muestra (junio); sirven solo como referencia del formato original, no como fixture numérico.
 
 > Nota: estos archivos contienen datos reales de negocio (montos, nombres de agentes) — por eso `sample-data/` está en `.gitignore` y nunca se sube al repo. Sigue existiendo en tu disco local para los tests; si clonas el repo en otra máquina, cópiala manualmente ahí.
+
+## Pendientes (para retomar después, desde cualquier máquina)
+
+1. **Rediseñar la interfaz** — más moderna, limpia, mejor usabilidad. Lo actual (`src/App.css` + componentes en `src/components/`) es funcional pero muy básico (CSS plano sin sistema de diseño).
+2. **No pedir "Conectar con Gmail" en cada envío** — hoy el access token de Google Identity Services vive solo en memoria de React (`useState` en `EmailComposer.tsx`), se pierde al recargar o cambiar de agrupamiento porque el componente se remonta (`key={selected}` en `App.tsx`). Alternativas: subir el token a estado en `App.tsx` (sobrevive entre agrupamientos en la misma sesión de pestaña) y/o cachearlo en `sessionStorage` con su expiración (~1h) para no perderlo al reload. No usar `localStorage` para el token (es sensible, no debe persistir indefinidamente).
+3. **Configuración masiva por agrupamiento + envío masivo** — hoy el flujo es agrupamiento por agrupamiento (%, régimen fiscal, destinatarios ya se guardan por agrupamiento en localStorage, ver `pctPorAgrupamiento`, `regimenPorAgrupamiento`, `destinatariosPorAgrupamiento` en `App.tsx`). Falta:
+   - Una pantalla de configuración global: tabla con todos los agrupamientos detectados y, por cada uno, % de bono / régimen fiscal / destinatarios en una sola vista (en vez de tener que seleccionar cada agrupamiento uno por uno para verlo/editarlo).
+   - Un botón de "Enviar todos" que genere el PDF y mande el correo de cada agrupamiento con su configuración particular, en lote, mostrando progreso y resultado por agrupamiento (éxito/error individual, no todo-o-nada).
