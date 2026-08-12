@@ -25,4 +25,11 @@ describe('renderPlantilla — resumen del correo', () => {
     expect(cuerpo).toContain('- Neto a pagar:')
     expect(cuerpo).not.toContain('- Total:')
   })
+
+  it('incluye el concepto requerido para el recibo de honorarios o factura', () => {
+    const reporte = calculateReporte(rows, 'AUREN', 0.07, 'moral')
+    const cuerpo = renderPlantilla(PLANTILLA_DEFAULT.cuerpo, reporte, 'JUNIO 2026')
+
+    expect(cuerpo).toContain('Asesoría en ventas para seguros AFIRME')
+  })
 })

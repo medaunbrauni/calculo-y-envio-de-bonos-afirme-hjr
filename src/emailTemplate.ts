@@ -15,6 +15,8 @@ Adjunto el reporte de Bono correspondiente a {agrupamiento} - {mes}.
 Resumen:
 {resumen}
 
+El concepto del recibo de honorarios o factura debe ser: "Asesoría en ventas para seguros AFIRME".
+
 Favor de confirmar recepción.
 
 Saludos.`,

@@ -52,6 +52,16 @@ export function EnvioMasivo({
   const [estados, setEstados] = useState<Record<string, EstadoEnvio>>({})
   const [enviando, setEnviando] = useState(false)
   const [errorConexion, setErrorConexion] = useState<string | null>(null)
+  const [cfdi, setCfdi] = useState<{ name: string; bytes: Uint8Array } | null>(null)
+
+  async function handleCfdiChange(file: File | undefined) {
+    if (!file) {
+      setCfdi(null)
+      return
+    }
+    const bytes = new Uint8Array(await file.arrayBuffer())
+    setCfdi({ name: file.name, bytes })
+  }
 
   async function handleEnviarTodos() {
     setErrorConexion(null)
@@ -99,17 +109,22 @@ export function EnvioMasivo({
         const doc = generateReportePdf(reporte, { mesReporte, branding })
         const pdfBytes = new Uint8Array(doc.output('arraybuffer') as ArrayBuffer)
 
+        const attachments = [
+          {
+            filename: nombreArchivoPdf(reporte, mesReporte),
+            mimeType: 'application/pdf',
+            content: pdfBytes,
+          },
+        ]
+        if (cfdi) {
+          attachments.push({ filename: cfdi.name, mimeType: 'application/pdf', content: cfdi.bytes })
+        }
+
         await sendGmailMessage(token, {
           to: destinatarios.join(', '),
           subject: renderPlantilla(plantilla.asunto, reporte, mesReporte),
           bodyText: renderPlantilla(plantilla.cuerpo, reporte, mesReporte),
-          attachments: [
-            {
-              filename: nombreArchivoPdf(reporte, mesReporte),
-              mimeType: 'application/pdf',
-              content: pdfBytes,
-            },
-          ],
+          attachments,
         })
         nuevosEstados[agrupamiento] = { kind: 'enviado' }
       } catch (err) {
@@ -176,6 +191,18 @@ export function EnvioMasivo({
           ))}
         </tbody>
       </table>
+
+      <label className="envio-masivo__cfdi">
+        CFDI / recibo de honorarios (opcional, se adjunta a los correos de todo el lote)
+        <input
+          type="file"
+          accept="application/pdf"
+          onChange={(e) => {
+            void handleCfdiChange(e.target.files?.[0])
+          }}
+        />
+      </label>
+      {cfdi && <p className="message message--success">Se adjuntará: {cfdi.name}</p>}
 
       {!clientId && (
         <p className="message message--error">

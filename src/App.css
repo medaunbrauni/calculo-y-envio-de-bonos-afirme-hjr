@@ -286,6 +286,13 @@ button {
 .envio-masivo .message {
   margin: 0;
 }
+.envio-masivo__cfdi {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  font-size: 0.85rem;
+  margin: 1rem 0;
+}
 .subagente-table caption {
   text-align: left;
   font-weight: 600;
