@@ -4,8 +4,15 @@
 
 interface TokenResponse {
   access_token?: string
+  expires_in?: number
   error?: string
   error_description?: string
+}
+
+export interface GmailToken {
+  accessToken: string
+  /** Segundos de vigencia del token (Google normalmente da ~3600). */
+  expiresIn: number
 }
 
 interface TokenClient {
@@ -52,19 +59,19 @@ function loadGisScript(): Promise<void> {
   return gisScriptPromise
 }
 
-export async function requestGmailAccessToken(clientId: string): Promise<string> {
+export async function requestGmailAccessToken(clientId: string): Promise<GmailToken> {
   await loadGisScript()
   if (!window.google?.accounts?.oauth2) {
     throw new GmailAuthError('Google Identity Services no está disponible.')
   }
 
-  return new Promise<string>((resolve, reject) => {
+  return new Promise<GmailToken>((resolve, reject) => {
     const client = window.google!.accounts.oauth2.initTokenClient({
       client_id: clientId,
       scope: GMAIL_SEND_SCOPE,
       callback: (response) => {
         if (response.access_token) {
-          resolve(response.access_token)
+          resolve({ accessToken: response.access_token, expiresIn: response.expires_in ?? 3600 })
         } else {
           reject(
             new GmailAuthError(

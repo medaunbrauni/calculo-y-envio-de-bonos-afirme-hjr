@@ -1,12 +1,15 @@
 import { useEffect, useMemo, useState } from 'react'
+import './App.css'
 import { FileUpload } from './components/FileUpload'
 import { AgrupamientoSelector } from './components/AgrupamientoSelector'
 import { ReportePreview } from './components/ReportePreview'
 import { GenerarPdfButton } from './components/GenerarPdfButton'
 import { EmailComposer } from './components/EmailComposer'
+import { EnvioMasivo } from './components/EnvioMasivo'
 import { BrandingSettings } from './components/BrandingSettings'
 import { useMatrizWorkbook } from './hooks/useMatrizWorkbook'
 import { useLocalStorage } from './hooks/useLocalStorage'
+import { useGmailSession } from './hooks/useGmailSession'
 import { calculateReporte, type RegimenFiscal } from './engine/calculate'
 import { calcularMesPredominante } from './engine/mesReporte'
 import { PLANTILLA_DEFAULT } from './emailTemplate'
@@ -33,6 +36,7 @@ function App() {
     'bonos-afirme:branding',
     DEFAULT_BRANDING,
   )
+  const gmailSession = useGmailSession()
 
   useEffect(() => {
     document.documentElement.style.setProperty('--brand-primary', branding.colorPrimario)
@@ -63,19 +67,16 @@ function App() {
     void workbook.loadFile(file)
   }
 
-  function handlePctChange(value: number) {
-    if (!selected) return
-    setPctPorAgrupamiento((prev) => ({ ...prev, [selected]: value }))
+  function handlePctChangeFor(agrupamiento: string, value: number) {
+    setPctPorAgrupamiento((prev) => ({ ...prev, [agrupamiento]: value }))
   }
 
-  function handleDestinatariosChange(value: string[]) {
-    if (!selected) return
-    setDestinatariosPorAgrupamiento((prev) => ({ ...prev, [selected]: value }))
+  function handleDestinatariosChangeFor(agrupamiento: string, value: string[]) {
+    setDestinatariosPorAgrupamiento((prev) => ({ ...prev, [agrupamiento]: value }))
   }
 
-  function handleRegimenFiscalChange(value: RegimenFiscal) {
-    if (!selected) return
-    setRegimenPorAgrupamiento((prev) => ({ ...prev, [selected]: value }))
+  function handleRegimenFiscalChangeFor(agrupamiento: string, value: RegimenFiscal) {
+    setRegimenPorAgrupamiento((prev) => ({ ...prev, [agrupamiento]: value }))
   }
 
   return (
@@ -110,6 +111,23 @@ function App() {
             selected={selected}
             onSelect={setSelected}
           />
+
+          <EnvioMasivo
+            agrupamientos={workbook.agrupamientos}
+            rows={workbook.rows}
+            mesReporte={mesReporte}
+            pctPorAgrupamiento={pctPorAgrupamiento}
+            onPctChange={handlePctChangeFor}
+            regimenPorAgrupamiento={regimenPorAgrupamiento}
+            onRegimenFiscalChange={handleRegimenFiscalChangeFor}
+            destinatariosPorAgrupamiento={destinatariosPorAgrupamiento}
+            onDestinatariosChange={handleDestinatariosChangeFor}
+            plantilla={plantilla}
+            branding={branding}
+            clientId={GOOGLE_CLIENT_ID}
+            gmailToken={gmailSession.accessToken}
+            onGmailToken={gmailSession.guardar}
+          />
         </>
       )}
 
@@ -118,10 +136,10 @@ function App() {
           <ReportePreview
             reporte={reporte}
             pct={pct}
-            onPctChange={handlePctChange}
+            onPctChange={(value) => handlePctChangeFor(selected, value)}
             mesReporte={mesReporte}
             regimenFiscal={regimenFiscal}
-            onRegimenFiscalChange={handleRegimenFiscalChange}
+            onRegimenFiscalChange={(value) => handleRegimenFiscalChangeFor(selected, value)}
           />
           <GenerarPdfButton reporte={reporte} pct={pct} mesReporte={mesReporte} branding={branding} />
           <EmailComposer
@@ -129,10 +147,12 @@ function App() {
             pct={pct}
             mesReporte={mesReporte}
             destinatarios={destinatariosPorAgrupamiento[selected] ?? []}
-            onDestinatariosChange={handleDestinatariosChange}
+            onDestinatariosChange={(value) => handleDestinatariosChangeFor(selected, value)}
             plantilla={plantilla}
             branding={branding}
             clientId={GOOGLE_CLIENT_ID}
+            gmailToken={gmailSession.accessToken}
+            onGmailToken={gmailSession.guardar}
           />
         </div>
       )}

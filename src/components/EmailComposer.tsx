@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import type { ReporteBono } from '../engine/calculate'
 import type { BrandingConfig } from '../pdf/branding'
 import { generateReportePdf, nombreArchivoPdf } from '../pdf/generateReportePdf'
@@ -18,6 +18,8 @@ interface Props {
   plantilla: PlantillaCorreo
   branding?: BrandingConfig
   clientId?: string
+  gmailToken: string | null
+  onGmailToken: (accessToken: string, expiresIn: number) => void
 }
 
 type EnvioStatus =
@@ -35,11 +37,25 @@ export function EmailComposer({
   plantilla,
   branding,
   clientId,
+  gmailToken,
+  onGmailToken,
 }: Props) {
   const [asunto, setAsunto] = useState(() => renderPlantilla(plantilla.asunto, reporte, mesReporte))
   const [cuerpo, setCuerpo] = useState(() => renderPlantilla(plantilla.cuerpo, reporte, mesReporte))
+  const asuntoEditado = useRef(false)
+  const cuerpoEditado = useRef(false)
+
+  // Si el usuario abre el correo antes de terminar de capturar % o mes, el texto
+  // se calcula con datos incompletos (ej. $0.00). Este efecto lo recalcula cada
+  // vez que el reporte cambia, para que no se quede "congelado" con esos ceros
+  // mientras el PDF (que sí se genera al momento de enviar) ya trae el número real.
+  // Se respeta cualquier edición manual del usuario, no se le pisa su texto.
+  useEffect(() => {
+    if (!asuntoEditado.current) setAsunto(renderPlantilla(plantilla.asunto, reporte, mesReporte))
+    if (!cuerpoEditado.current) setCuerpo(renderPlantilla(plantilla.cuerpo, reporte, mesReporte))
+  }, [reporte, mesReporte, plantilla])
+
   const [constancia, setConstancia] = useState<{ name: string; bytes: Uint8Array } | null>(null)
-  const [accessToken, setAccessToken] = useState<string | null>(null)
   const [status, setStatus] = useState<EnvioStatus>({ kind: 'idle' })
 
   const puedeGenerar = esPctValido(pct) && Boolean(mesReporte.trim())
@@ -50,7 +66,7 @@ export function EmailComposer({
     setStatus({ kind: 'idle' })
     try {
       const token = await requestGmailAccessToken(clientId)
-      setAccessToken(token)
+      onGmailToken(token.accessToken, token.expiresIn)
     } catch (err) {
       setStatus({
         kind: 'error',
@@ -72,10 +88,11 @@ export function EmailComposer({
     if (!puedeEnviar || !clientId) return
     setStatus({ kind: 'sending' })
     try {
-      let token = accessToken
+      let token = gmailToken
       if (!token) {
-        token = await requestGmailAccessToken(clientId)
-        setAccessToken(token)
+        const nuevoToken = await requestGmailAccessToken(clientId)
+        onGmailToken(nuevoToken.accessToken, nuevoToken.expiresIn)
+        token = nuevoToken.accessToken
       }
 
       const doc = generateReportePdf(reporte, { mesReporte, branding })
@@ -126,12 +143,26 @@ export function EmailComposer({
 
       <label>
         Asunto
-        <input type="text" value={asunto} onChange={(e) => setAsunto(e.target.value)} />
+        <input
+          type="text"
+          value={asunto}
+          onChange={(e) => {
+            asuntoEditado.current = true
+            setAsunto(e.target.value)
+          }}
+        />
       </label>
 
       <label>
         Cuerpo
-        <textarea rows={10} value={cuerpo} onChange={(e) => setCuerpo(e.target.value)} />
+        <textarea
+          rows={10}
+          value={cuerpo}
+          onChange={(e) => {
+            cuerpoEditado.current = true
+            setCuerpo(e.target.value)
+          }}
+        />
       </label>
 
       <label>
@@ -146,7 +177,7 @@ export function EmailComposer({
       </label>
 
       <div className="email-composer__actions">
-        {!accessToken && (
+        {!gmailToken && (
           <button
             type="button"
             onClick={() => {
@@ -157,7 +188,7 @@ export function EmailComposer({
             Conectar con Gmail
           </button>
         )}
-        {accessToken && <span className="message message--success">Gmail conectado</span>}
+        {gmailToken && <span className="message message--success">Gmail conectado</span>}
 
         <button
           type="button"

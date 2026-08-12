@@ -68,10 +68,13 @@ sample-data/   → Excel real + PDFs de referencia (formato), usados como fixtur
 
 > Nota: estos archivos contienen datos reales de negocio (montos, nombres de agentes) — por eso `sample-data/` está en `.gitignore` y nunca se sube al repo. Sigue existiendo en tu disco local para los tests; si clonas el repo en otra máquina, cópiala manualmente ahí.
 
-## Pendientes (para retomar después, desde cualquier máquina)
+## Pendientes
 
-1. **Rediseñar la interfaz** — más moderna, limpia, mejor usabilidad. Lo actual (`src/App.css` + componentes en `src/components/`) es funcional pero muy básico (CSS plano sin sistema de diseño).
-2. **No pedir "Conectar con Gmail" en cada envío** — hoy el access token de Google Identity Services vive solo en memoria de React (`useState` en `EmailComposer.tsx`), se pierde al recargar o cambiar de agrupamiento porque el componente se remonta (`key={selected}` en `App.tsx`). Alternativas: subir el token a estado en `App.tsx` (sobrevive entre agrupamientos en la misma sesión de pestaña) y/o cachearlo en `sessionStorage` con su expiración (~1h) para no perderlo al reload. No usar `localStorage` para el token (es sensible, no debe persistir indefinidamente).
-3. **Configuración masiva por agrupamiento + envío masivo** — hoy el flujo es agrupamiento por agrupamiento (%, régimen fiscal, destinatarios ya se guardan por agrupamiento en localStorage, ver `pctPorAgrupamiento`, `regimenPorAgrupamiento`, `destinatariosPorAgrupamiento` en `App.tsx`). Falta:
-   - Una pantalla de configuración global: tabla con todos los agrupamientos detectados y, por cada uno, % de bono / régimen fiscal / destinatarios en una sola vista (en vez de tener que seleccionar cada agrupamiento uno por uno para verlo/editarlo).
-   - Un botón de "Enviar todos" que genere el PDF y mande el correo de cada agrupamiento con su configuración particular, en lote, mostrando progreso y resultado por agrupamiento (éxito/error individual, no todo-o-nada).
+Sin pendientes activos por el momento.
+
+### Resuelto (2026-08-12)
+
+1. **Bug: el cuerpo del correo no coincidía con el cálculo** — el texto se generaba una sola vez al abrir la sección de envío; si el % de bono aún no estaba capturado, quedaba "congelado" en $0.00 aunque el PDF ya mostrara el monto correcto. Ahora se recalcula solo cuando cambia el reporte, respetando cualquier edición manual (`src/components/EmailComposer.tsx`).
+2. **Rediseño de la interfaz** — se conectó `App.css` (nunca se importaba, llevaba así desde el scaffold inicial) y se limpió la paleta/espaciado; mismo HTML, sin librerías nuevas.
+3. **Sesión de Gmail persistente** — el token vive ahora en `App.tsx` (`useGmailSession`, `src/hooks/useGmailSession.ts`) cacheado en `sessionStorage` con su expiración real, ya no se pierde al cambiar de agrupamiento ni pide reconectar de más.
+4. **Configuración masiva + envío masivo** — nueva sección "Envío masivo" (`src/components/EnvioMasivo.tsx`): tabla con todos los agrupamientos (%, régimen fiscal, destinatarios editables) y botón "Enviar todos" que manda el PDF + correo de cada uno; si a alguno le falta un dato, se salta con el motivo y sigue con los demás.
