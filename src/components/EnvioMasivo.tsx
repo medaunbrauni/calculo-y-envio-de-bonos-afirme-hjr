@@ -125,9 +125,7 @@ export function EnvioMasivo({
   }
 
   return (
-    <section className="envio-masivo">
-      <h2>Envío masivo</h2>
-
+    <>
       <table className="envio-masivo-table">
         <thead>
           <tr>
@@ -196,7 +194,7 @@ export function EnvioMasivo({
       >
         {enviando ? 'Enviando…' : 'Enviar todos'}
       </button>
-    </section>
+    </>
   )
 }
 

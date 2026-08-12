@@ -1,17 +1,50 @@
 main {
-  max-width: 880px;
+  max-width: 1280px;
   margin: 0 auto;
   padding: 2.5rem 1.5rem 4rem;
 }
 
-main > header,
-main > h1 {
-  margin-bottom: 0.25rem;
+.app-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.75rem;
+}
+.app-header p {
+  color: var(--text-muted);
+  margin-top: 0.25rem;
+}
+.theme-toggle {
+  padding: 0.5rem 0.9rem;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  cursor: pointer;
+  font-size: 0.85rem;
+  white-space: nowrap;
+}
+.theme-toggle:hover {
+  border-color: var(--brand-primary, #1d4ed8);
 }
 
-main > p:first-of-type {
-  color: var(--text-muted);
-  margin-bottom: 1.75rem;
+.layout {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
+}
+@media (min-width: 900px) {
+  .layout {
+    grid-template-columns: 320px 1fr;
+    align-items: start;
+  }
+  .layout__sidebar {
+    position: sticky;
+    top: 1.5rem;
+    max-height: calc(100vh - 3rem);
+    overflow-y: auto;
+  }
 }
 
 section {
@@ -21,6 +54,28 @@ section {
   box-shadow: var(--shadow);
   padding: 1.25rem 1.5rem;
   margin-bottom: 1.25rem;
+}
+
+.collapsible__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  background: none;
+  border: none;
+  padding: 0;
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--text-h);
+  cursor: pointer;
+  font-family: inherit;
+}
+.collapsible__chevron {
+  color: var(--text-muted);
+  font-size: 0.8rem;
+}
+.collapsible__body {
+  margin-top: 1rem;
 }
 
 button {
@@ -34,30 +89,16 @@ button {
   font-size: 0.9rem;
 }
 .message--info {
-  background: #eef2ff;
-  color: #3730a3;
+  background: var(--message-info-bg);
+  color: var(--message-info-text);
 }
 .message--success {
-  background: #ecfdf5;
-  color: #065f46;
+  background: var(--message-success-bg);
+  color: var(--message-success-text);
 }
 .message--error {
-  background: #fef2f2;
-  color: #991b1b;
-}
-@media (prefers-color-scheme: dark) {
-  .message--info {
-    background: rgba(99, 102, 241, 0.15);
-    color: #c7d2fe;
-  }
-  .message--success {
-    background: rgba(16, 185, 129, 0.15);
-    color: #a7f3d0;
-  }
-  .message--error {
-    background: rgba(239, 68, 68, 0.15);
-    color: #fecaca;
-  }
+  background: var(--message-error-bg);
+  color: var(--message-error-text);
 }
 
 button {
@@ -92,8 +133,9 @@ button {
 }
 .file-upload__label {
   display: flex;
-  align-items: center;
-  gap: 0.75rem;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.5rem;
   cursor: pointer;
 }
 

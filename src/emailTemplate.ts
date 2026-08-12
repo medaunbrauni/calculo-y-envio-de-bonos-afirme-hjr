@@ -13,16 +13,34 @@ export const PLANTILLA_DEFAULT: PlantillaCorreo = {
 Adjunto el reporte de Bono correspondiente a {agrupamiento} - {mes}.
 
 Resumen:
-- Prima Base: {primaBase}
-- Bono ({pct}): {montoPct}
-- Emisión Delegada: {emisionDelegada}
-- Subtotal: {subtotal}
-- IVA: {iva}
-- Total: {total}
+{resumen}
 
 Favor de confirmar recepción.
 
 Saludos.`,
+}
+
+// Mismo desglose que las tarjetas de ReportePreview: solo se listan las
+// retenciones cuando el agrupamiento es persona física, si no el correo
+// muestra un Subtotal+IVA que no cuadra con el Total sin explicación.
+function construirResumenTexto(reporte: ReporteBono): string {
+  const { resumen } = reporte
+  const esPersonaFisica = resumen.regimenFiscal !== 'moral'
+
+  const lineas = [
+    `- Prima Base: ${formatCurrency(resumen.primaBase)}`,
+    `- Bono (${formatPercent(resumen.pct)}): ${formatCurrency(resumen.montoPct)}`,
+    `- Emisión Delegada: ${formatCurrency(resumen.emisionDelegada)}`,
+    `- Subtotal: ${formatCurrency(resumen.subtotal)}`,
+    `- IVA: ${formatCurrency(resumen.iva)}`,
+  ]
+  if (esPersonaFisica) {
+    lineas.push(`- Retención IVA: -${formatCurrency(resumen.retencionIva)}`)
+    lineas.push(`- Retención ISR: -${formatCurrency(resumen.retencionIsr)}`)
+  }
+  lineas.push(`- ${esPersonaFisica ? 'Neto a pagar' : 'Total'}: ${formatCurrency(resumen.total)}`)
+
+  return lineas.join('\n')
 }
 
 function variablesDeReporte(reporte: ReporteBono, mesReporte: string): Record<string, string> {
@@ -35,7 +53,10 @@ function variablesDeReporte(reporte: ReporteBono, mesReporte: string): Record<st
     emisionDelegada: formatCurrency(reporte.resumen.emisionDelegada),
     subtotal: formatCurrency(reporte.resumen.subtotal),
     iva: formatCurrency(reporte.resumen.iva),
+    retencionIva: formatCurrency(reporte.resumen.retencionIva),
+    retencionIsr: formatCurrency(reporte.resumen.retencionIsr),
     total: formatCurrency(reporte.resumen.total),
+    resumen: construirResumenTexto(reporte),
   }
 }
 

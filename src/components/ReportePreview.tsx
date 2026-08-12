@@ -24,7 +24,7 @@ export function ReportePreview({
   const esPersonaFisica = regimenFiscal !== 'moral'
 
   return (
-    <section className="reporte-preview">
+    <>
       <h2>
         {reporte.agrupamiento}
         {mesReporte ? ` — ${mesReporte}` : ''}
@@ -173,7 +173,7 @@ export function ReportePreview({
           </tfoot>
         </table>
       )}
-    </section>
+    </>
   )
 }
 

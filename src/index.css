@@ -10,6 +10,13 @@
   --brand-primary: #1d4ed8;
   --brand-secondary: #0b3d91;
 
+  --message-info-bg: #eef2ff;
+  --message-info-text: #3730a3;
+  --message-success-bg: #ecfdf5;
+  --message-success-text: #065f46;
+  --message-error-bg: #fef2f2;
+  --message-error-text: #991b1b;
+
   --sans: system-ui, 'Segoe UI', Roboto, sans-serif;
 
   font: 15px/150% var(--sans);
@@ -22,8 +29,10 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
+/* El botón claro/oscuro (useTheme) escribe data-theme en <html>; cuando lo hace,
+   gana sobre la preferencia del sistema en ambos sentidos. */
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-theme='light']) {
     --text: #cbc9d1;
     --text-muted: #9c99a5;
     --text-h: #f3f2f5;
@@ -31,7 +40,29 @@
     --surface: #1b1a21;
     --border: #302f38;
     --shadow: rgba(0, 0, 0, 0.35) 0 1px 2px, rgba(0, 0, 0, 0.3) 0 4px 12px;
+    --message-info-bg: rgba(99, 102, 241, 0.15);
+    --message-info-text: #c7d2fe;
+    --message-success-bg: rgba(16, 185, 129, 0.15);
+    --message-success-text: #a7f3d0;
+    --message-error-bg: rgba(239, 68, 68, 0.15);
+    --message-error-text: #fecaca;
   }
+}
+
+:root[data-theme='dark'] {
+  --text: #cbc9d1;
+  --text-muted: #9c99a5;
+  --text-h: #f3f2f5;
+  --bg: #131217;
+  --surface: #1b1a21;
+  --border: #302f38;
+  --shadow: rgba(0, 0, 0, 0.35) 0 1px 2px, rgba(0, 0, 0, 0.3) 0 4px 12px;
+  --message-info-bg: rgba(99, 102, 241, 0.15);
+  --message-info-text: #c7d2fe;
+  --message-success-bg: rgba(16, 185, 129, 0.15);
+  --message-success-text: #a7f3d0;
+  --message-error-bg: rgba(239, 68, 68, 0.15);
+  --message-error-text: #fecaca;
 }
 
 body {

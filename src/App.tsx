@@ -7,9 +7,11 @@ import { GenerarPdfButton } from './components/GenerarPdfButton'
 import { EmailComposer } from './components/EmailComposer'
 import { EnvioMasivo } from './components/EnvioMasivo'
 import { BrandingSettings } from './components/BrandingSettings'
+import { Collapsible } from './components/Collapsible'
 import { useMatrizWorkbook } from './hooks/useMatrizWorkbook'
 import { useLocalStorage } from './hooks/useLocalStorage'
 import { useGmailSession } from './hooks/useGmailSession'
+import { useTheme } from './hooks/useTheme'
 import { calculateReporte, type RegimenFiscal } from './engine/calculate'
 import { calcularMesPredominante } from './engine/mesReporte'
 import { PLANTILLA_DEFAULT } from './emailTemplate'
@@ -31,12 +33,16 @@ function App() {
   const [regimenPorAgrupamiento, setRegimenPorAgrupamiento] = useLocalStorage<
     Record<string, RegimenFiscal>
   >('bonos-afirme:regimen-fiscal-por-agrupamiento', {})
-  const [plantilla] = useLocalStorage('bonos-afirme:plantilla-correo', PLANTILLA_DEFAULT)
+  // No se guarda en localStorage: no hay UI para editarla, y si se guardara
+  // quedaría congelada con la versión vieja para siempre (mismo problema que
+  // tuvo el token de Gmail, ver useGmailSession).
+  const plantilla = PLANTILLA_DEFAULT
   const [branding, setBranding] = useLocalStorage<BrandingConfig>(
     'bonos-afirme:branding',
     DEFAULT_BRANDING,
   )
   const gmailSession = useGmailSession()
+  const { tema, alternar } = useTheme()
 
   useEffect(() => {
     document.documentElement.style.setProperty('--brand-primary', branding.colorPrimario)
@@ -81,81 +87,104 @@ function App() {
 
   return (
     <main>
-      <h1>Bonos AFIRME</h1>
-      <p>Sube el Excel mensual (pestaña MATRIZ) para generar los reportes de bono.</p>
-
-      <BrandingSettings branding={branding} onChange={setBranding} />
-
-      <FileUpload
-        status={workbook.status}
-        fileName={workbook.fileName}
-        error={workbook.error}
-        onFileSelected={handleFileSelected}
-      />
-
-      {workbook.status === 'success' && (
-        <>
-          <label className="mes-reporte">
-            Mes de producción que cubre este reporte (sugerido a partir de FECHAMOVIMIENTO —
-            edítalo si no es correcto)
-            <input
-              type="text"
-              placeholder="MAYO 2026"
-              value={mesReporte}
-              onChange={(e) => setMesReporte(e.target.value)}
-            />
-          </label>
-
-          <AgrupamientoSelector
-            agrupamientos={workbook.agrupamientos}
-            selected={selected}
-            onSelect={setSelected}
-          />
-
-          <EnvioMasivo
-            agrupamientos={workbook.agrupamientos}
-            rows={workbook.rows}
-            mesReporte={mesReporte}
-            pctPorAgrupamiento={pctPorAgrupamiento}
-            onPctChange={handlePctChangeFor}
-            regimenPorAgrupamiento={regimenPorAgrupamiento}
-            onRegimenFiscalChange={handleRegimenFiscalChangeFor}
-            destinatariosPorAgrupamiento={destinatariosPorAgrupamiento}
-            onDestinatariosChange={handleDestinatariosChangeFor}
-            plantilla={plantilla}
-            branding={branding}
-            clientId={GOOGLE_CLIENT_ID}
-            gmailToken={gmailSession.accessToken}
-            onGmailToken={gmailSession.guardar}
-          />
-        </>
-      )}
-
-      {selected && reporte && (
-        <div key={selected}>
-          <ReportePreview
-            reporte={reporte}
-            pct={pct}
-            onPctChange={(value) => handlePctChangeFor(selected, value)}
-            mesReporte={mesReporte}
-            regimenFiscal={regimenFiscal}
-            onRegimenFiscalChange={(value) => handleRegimenFiscalChangeFor(selected, value)}
-          />
-          <GenerarPdfButton reporte={reporte} pct={pct} mesReporte={mesReporte} branding={branding} />
-          <EmailComposer
-            reporte={reporte}
-            pct={pct}
-            mesReporte={mesReporte}
-            destinatarios={destinatariosPorAgrupamiento[selected] ?? []}
-            onDestinatariosChange={(value) => handleDestinatariosChangeFor(selected, value)}
-            plantilla={plantilla}
-            branding={branding}
-            clientId={GOOGLE_CLIENT_ID}
-            gmailToken={gmailSession.accessToken}
-            onGmailToken={gmailSession.guardar}
-          />
+      <div className="app-header">
+        <div>
+          <h1>Bonos AFIRME</h1>
+          <p>Sube el Excel mensual (pestaña MATRIZ) para generar los reportes de bono.</p>
         </div>
-      )}
+        <button type="button" className="theme-toggle" onClick={alternar}>
+          {tema === 'dark' ? 'Modo claro' : 'Modo oscuro'}
+        </button>
+      </div>
+
+      <div className="layout">
+        <div className="layout__sidebar">
+          <Collapsible title="Personalización de marca" defaultOpen={false} className="branding-settings">
+            <BrandingSettings branding={branding} onChange={setBranding} />
+          </Collapsible>
+
+          <FileUpload
+            status={workbook.status}
+            fileName={workbook.fileName}
+            error={workbook.error}
+            onFileSelected={handleFileSelected}
+          />
+
+          {workbook.status === 'success' && (
+            <>
+              <label className="mes-reporte">
+                Mes de producción que cubre este reporte (sugerido a partir de FECHAMOVIMIENTO —
+                edítalo si no es correcto)
+                <input
+                  type="text"
+                  placeholder="MAYO 2026"
+                  value={mesReporte}
+                  onChange={(e) => setMesReporte(e.target.value)}
+                />
+              </label>
+
+              <AgrupamientoSelector
+                agrupamientos={workbook.agrupamientos}
+                selected={selected}
+                onSelect={setSelected}
+              />
+            </>
+          )}
+        </div>
+
+        <div className="layout__main">
+          {workbook.status === 'success' && (
+            <Collapsible title="Envío masivo" defaultOpen={false} className="envio-masivo">
+              <EnvioMasivo
+                agrupamientos={workbook.agrupamientos}
+                rows={workbook.rows}
+                mesReporte={mesReporte}
+                pctPorAgrupamiento={pctPorAgrupamiento}
+                onPctChange={handlePctChangeFor}
+                regimenPorAgrupamiento={regimenPorAgrupamiento}
+                onRegimenFiscalChange={handleRegimenFiscalChangeFor}
+                destinatariosPorAgrupamiento={destinatariosPorAgrupamiento}
+                onDestinatariosChange={handleDestinatariosChangeFor}
+                plantilla={plantilla}
+                branding={branding}
+                clientId={GOOGLE_CLIENT_ID}
+                gmailToken={gmailSession.accessToken}
+                onGmailToken={gmailSession.guardar}
+              />
+            </Collapsible>
+          )}
+
+          {selected && reporte && (
+            <Collapsible
+              key={selected}
+              title={`Detalle — ${selected}${mesReporte ? ` — ${mesReporte}` : ''}`}
+              className="reporte-preview"
+            >
+              <ReportePreview
+                reporte={reporte}
+                pct={pct}
+                onPctChange={(value) => handlePctChangeFor(selected, value)}
+                mesReporte={mesReporte}
+                regimenFiscal={regimenFiscal}
+                onRegimenFiscalChange={(value) => handleRegimenFiscalChangeFor(selected, value)}
+              />
+              <GenerarPdfButton reporte={reporte} pct={pct} mesReporte={mesReporte} branding={branding} />
+              <EmailComposer
+                reporte={reporte}
+                pct={pct}
+                mesReporte={mesReporte}
+                destinatarios={destinatariosPorAgrupamiento[selected] ?? []}
+                onDestinatariosChange={(value) => handleDestinatariosChangeFor(selected, value)}
+                plantilla={plantilla}
+                branding={branding}
+                clientId={GOOGLE_CLIENT_ID}
+                gmailToken={gmailSession.accessToken}
+                onGmailToken={gmailSession.guardar}
+              />
+            </Collapsible>
+          )}
+        </div>
+      </div>
     </main>
   )
 }

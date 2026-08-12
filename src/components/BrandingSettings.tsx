@@ -41,8 +41,7 @@ export function BrandingSettings({ branding, onChange }: Props) {
   }
 
   return (
-    <section className="branding-settings">
-      <h3>Personalización de marca</h3>
+    <>
       <p className="branding-settings__hint">
         Estos colores y logo se usan en el PDF generado (y se guardan para los próximos meses).
       </p>
@@ -87,6 +86,6 @@ export function BrandingSettings({ branding, onChange }: Props) {
       </div>
 
       {error && <p className="message message--error">{error}</p>}
-    </section>
+    </>
   )
 }
