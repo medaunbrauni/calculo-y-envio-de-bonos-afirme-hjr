@@ -6,6 +6,7 @@ import type { BrandingConfig } from '../pdf/branding'
 import { renderPlantilla, type PlantillaCorreo } from '../emailTemplate'
 import { requestGmailAccessToken, GmailAuthError } from '../gmail/gis'
 import { sendGmailMessage, GmailSendError } from '../gmail/sendEmail'
+import type { EmailAttachment } from '../gmail/mime'
 import { DestinatariosEditor } from './DestinatariosEditor'
 import { esPctValido } from '../validation'
 
@@ -109,7 +110,7 @@ export function EnvioMasivo({
         const doc = generateReportePdf(reporte, { mesReporte, branding })
         const pdfBytes = new Uint8Array(doc.output('arraybuffer') as ArrayBuffer)
 
-        const attachments = [
+        const attachments: EmailAttachment[] = [
           {
             filename: nombreArchivoPdf(reporte, mesReporte),
             mimeType: 'application/pdf',
