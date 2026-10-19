@@ -109,6 +109,15 @@ function sortLabels(a: string, b: string): number {
 }
 
 /**
+ * Agrupamientos cuyo bono también suma la producción de otros, igual que la
+ * hoja "JIRO BONO" del Excel (JIRO + JIRO CHIH al 2%; CHIH además recibe su
+ * propio 4% por separado). No llevan emisión delegada (ni propia ni de los combinados).
+ */
+export const AGRUPAMIENTOS_COMBINADOS: Record<string, string[]> = {
+  JIRO: ['JIRO', 'JIRO CHIH'],
+}
+
+/**
  * Pivotea MATRIZ (ya filtrada por AGRUPAMIENTO) por RAMO -> SUBRAMO y calcula
  * el bloque resumen, replicando docs/business-logic.md secciones 2 y 3.
  * El desglose por sub-agente (porAgente) aplica para todos los agrupamientos.
@@ -119,7 +128,8 @@ export function calculateReporte(
   pct: number,
   regimenFiscal: RegimenFiscal = 'moral',
 ): ReporteBono {
-  const rows = allRows.filter((row) => row.agrupamiento === agrupamiento)
+  const incluidos: (string | null)[] = AGRUPAMIENTOS_COMBINADOS[agrupamiento] ?? [agrupamiento]
+  const rows = allRows.filter((row) => incluidos.includes(row.agrupamiento))
 
   const ramoMap = new Map<string, { totals: Totals; subramos: Map<string, Totals> }>()
   const agenteMap = new Map<string, number>()
@@ -165,7 +175,8 @@ export function calculateReporte(
 
   const primaBase = totalGeneral.primaDesc
   const montoPct = primaBase * pct
-  const emisionDelegada = totalGeneral.emiDel
+  // Los bonos combinados no llevan emisión delegada (igual que "JIRO BONO" en el Excel).
+  const emisionDelegada = AGRUPAMIENTOS_COMBINADOS[agrupamiento] ? 0 : totalGeneral.emiDel
   const subtotal = montoPct + emisionDelegada
   const iva = subtotal * IVA_RATE
 

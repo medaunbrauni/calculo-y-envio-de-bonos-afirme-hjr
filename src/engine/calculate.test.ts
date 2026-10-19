@@ -92,6 +92,14 @@ describe('calculateReporte', () => {
     expect(reporte.resumen.total).toBeCloseTo(3465.74, 2)
   })
 
+  it('reproduce "JIRO BONO" (JIRO + JIRO CHIH, 2%)', () => {
+    const reporte = calculateReporte(rows, 'JIRO', 0.02)
+
+    expect(reporte.resumen.primaBase).toBeCloseTo(120561.91, 2)
+    expect(reporte.resumen.subtotal).toBeCloseTo(2411.24, 2)
+    expect(reporte.resumen.total).toBeCloseTo(2797.04, 2)
+  })
+
   it('regresa un reporte vacío (totales en 0) para un agrupamiento inexistente', () => {
     const reporte = calculateReporte(rows, 'NO EXISTE', 0.1)
     expect(reporte.pivot).toEqual([])
