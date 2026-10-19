@@ -451,3 +451,23 @@ button {
   cursor: pointer;
   font-size: 0.8rem;
 }
+
+.config-backup {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border);
+}
+.config-backup__row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+.config-backup__row button {
+  padding: 0.35rem 0.7rem;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  cursor: pointer;
+  font-size: 0.8rem;
+}

@@ -7,6 +7,7 @@ import { GenerarPdfButton } from './components/GenerarPdfButton'
 import { EmailComposer } from './components/EmailComposer'
 import { EnvioMasivo } from './components/EnvioMasivo'
 import { BrandingSettings } from './components/BrandingSettings'
+import { ConfigBackup } from './components/ConfigBackup'
 import { Collapsible } from './components/Collapsible'
 import { useMatrizWorkbook } from './hooks/useMatrizWorkbook'
 import { useLocalStorage } from './hooks/useLocalStorage'
@@ -43,6 +44,12 @@ function App() {
   )
   const gmailSession = useGmailSession()
   const { tema, alternar } = useTheme()
+
+  useEffect(() => {
+    // Pide al navegador no desalojar localStorage por espacio (no evita el
+    // borrado manual o al cerrar; para eso está Exportar/Importar).
+    void navigator.storage?.persist?.()
+  }, [])
 
   useEffect(() => {
     document.documentElement.style.setProperty('--brand-primary', branding.colorPrimario)
@@ -101,6 +108,20 @@ function App() {
         <div className="layout__sidebar">
           <Collapsible title="Personalización de marca" defaultOpen={false} className="branding-settings">
             <BrandingSettings branding={branding} onChange={setBranding} />
+            <ConfigBackup
+              config={{
+                branding,
+                destinatarios: destinatariosPorAgrupamiento,
+                pct: pctPorAgrupamiento,
+                regimen: regimenPorAgrupamiento,
+              }}
+              onImport={(c) => {
+                setBranding(c.branding)
+                setDestinatariosPorAgrupamiento(c.destinatarios)
+                setPctPorAgrupamiento(c.pct)
+                setRegimenPorAgrupamiento(c.regimen)
+              }}
+            />
           </Collapsible>
 
           <FileUpload
