@@ -15,13 +15,24 @@ Este repo es el punto de partida para construir una **app web** que automatiza l
 4. UI: carga de archivo, selección de agrupamiento/agente, vista previa de tabla + cards.
 5. Generación de PDF "bonito" (tabla + cards) con el nuevo diseño.
 6. Redacción de correo (plantilla editable) + adjuntos (PDF + opcional constancia de situación fiscal subida por el usuario).
-7. Envío desde Gmail del usuario (ver sección de correo en el PRD — hay que decidir entre EmailJS/Gmail API antes de programar, está marcado como **DECISIÓN PENDIENTE**).
+7. Envío desde Gmail del usuario — **resuelto:** Gmail API 100% client-side con Google Identity Services (sin backend).
 8. Mensajes de confirmación/error en cada acción (carga de archivo, cálculo, generación de PDF, envío de correo).
 9. Deploy a GitHub Pages/Vercel (gratis).
 
 ## Reglas importantes
 - Todo el procesamiento (Excel, PDF, cálculo) debe poder correr **en el cliente** (browser) si se elige hosting 100% estático (GitHub Pages). Si se elige Vercel/Netlify, se pueden usar funciones serverless gratuitas para el envío de correo.
 - Nunca subir credenciales (client secret de Gmail, API keys) al repo. Usar variables de entorno / `.env` (con `.env.example` documentado) y `.gitignore`.
-- Antes de implementar el envío de correo, confirmar con el usuario qué método usar (ver PRD, sección "Envío de correo") porque cambia la arquitectura (con o sin backend).
 - Mantén el motor de cálculo desacoplado de la UI y cúbrelo con tests usando `sample-data/` como fixtures.
 - Idioma de la UI: español (México).
+
+## Estado actual (2026-10-19)
+- App completa y en producción: https://medaunbrauni.github.io/calculo-y-envio-de-bonos-afirme-hjr/ — deploy automático con GitHub Actions en cada push a `main` (el CI solo hace build; los tests necesitan `sample-data/`, que no está en el repo, y se corren local con `npx vitest run`).
+- `sample-data/` está en `.gitignore` (datos reales de agentes; el repo es público).
+
+## Reglas de negocio que no están en el Excel crudo
+- **Bonos combinados** (`AGRUPAMIENTOS_COMBINADOS` en `src/engine/calculate.ts`): el bono de `JIRO` suma la prima de `JIRO` + `JIRO CHIH` (al 2%), igual que la hoja "JIRO BONO". `JIRO CHIH` además recibe su propio bono (4%) por separado. Los bonos combinados **no llevan emisión delegada** (ni la propia ni la de los combinados).
+- Régimen fiscal por agrupamiento: moral / física general (ret. IVA 2/3, ret. ISR 10%) / física RESICO (ret. IVA 2/3, ret. ISR 1.25%).
+
+## Persistencia
+- Destinatarios, %, régimen fiscal y marca (colores + logo) se guardan en `localStorage` (`src/hooks/useLocalStorage.ts`). Como el navegador del usuario puede borrar esos datos al cerrar, existe **Exportar/Importar configuración** en un `.json` (`src/components/ConfigBackup.tsx`). Si se agrega una nueva configuración persistente, inclúyela también en ese respaldo.
+- El token de Gmail vive solo en `sessionStorage` (`src/hooks/useGmailSession.ts`), nunca en `localStorage`.
